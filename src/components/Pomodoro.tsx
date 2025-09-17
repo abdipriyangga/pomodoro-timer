@@ -4,7 +4,7 @@ import { Orbitron } from 'next/font/google';
 const orbitron = Orbitron({ subsets: ["latin"], weight: ["700"] });
 const Pomodoro = () => {
     const [mounted, setMounted] = useState(false);
-    const [timeLeft, setTimeLeft] = useState(25 * 60);
+    const [timeLeft, setTimeLeft] = useState(1 * 60);
     const [isRunning, setIsRunning] = useState(false);
     const [mode, setMode] = useState<'work' | 'break'>('work');
 
@@ -21,34 +21,52 @@ const Pomodoro = () => {
         // looping break music
         if (breakSoundRef.current) {
             breakSoundRef.current.loop = true;
+            breakSoundRef.current.volume = 1;
         }
     }, []);
+
+    // fungsi fade out
+    const fadeOut = (audio: HTMLAudioElement) => {
+        const fadeInterval = setInterval(() => {
+            if (audio.volume > 0.05) {
+                audio.volume = +(audio.volume - 0.05).toFixed(2);
+            } else {
+                audio.volume = 0;
+                audio.pause();
+                audio.currentTime = 0;
+                clearInterval(fadeInterval);
+            }
+        }, 100); // setiap 100ms turunin volume
+    };
+
     useEffect(() => {
         let timer: NodeJS.Timeout;
         if(isRunning && timeLeft > 0) {
             timer = setInterval(() => {
                 setTimeLeft((prev) => prev - 1);
             }, 1000)
-            if(mode === 'break') {
-                breakSoundRef.current?.play()
+            if(mode === 'break' && breakSoundRef.current) {
+                if(breakSoundRef.current.paused) {
+                    breakSoundRef.current.volume = 1;
+                    breakSoundRef.current?.play();
+                }
             }
         } else if(timeLeft === 0) {
             if(mode === 'work') {
                 workSoundRef.current?.play();
                 setMode('break');
-                setTimeLeft(25 * 60);
+                setTimeLeft(5 * 60);
             } else {
                 if(breakSoundRef.current) {
-                    breakSoundRef.current?.pause();
-                    breakSoundRef.current.currentTime = 0;
+                    fadeOut(breakSoundRef.current);
                 }
                 setMode('work');
-                setTimeLeft(5 * 60);
+                setTimeLeft(1 * 60);
             }
             setIsRunning(false);
         } else {
             if(mode === 'break' && breakSoundRef.current) {
-                breakSoundRef.current.pause()
+                fadeOut(breakSoundRef.current);
             }
         }
         return () => clearInterval(timer);
@@ -66,20 +84,21 @@ const Pomodoro = () => {
         setIsRunning((prev) => {
             const newState = !prev;
             // kalau baru mulai di break mode → play musik break
-            if (newState && mode === "break") {
+            if (newState && mode === "break" && breakSoundRef.current) {
+                breakSoundRef.current.volume = 1;
                 breakSoundRef.current?.play();
+            } else if(!newState && mode === 'break' && breakSoundRef.current) {
+                fadeOut(breakSoundRef.current)
             }
             return newState;
         });
     };
     const handleReset = () => {
         setIsRunning(false);
-        setTimeLeft(mode === "work" ? 25 * 60 : 5 * 60);
-
+        setTimeLeft(mode === "work" ? 1 * 60 : 5 * 60);
         // reset musik break
         if (breakSoundRef.current) {
-            breakSoundRef.current.pause();
-            breakSoundRef.current.currentTime = 0;
+            fadeOut(breakSoundRef.current)
         }
     };
     return (
