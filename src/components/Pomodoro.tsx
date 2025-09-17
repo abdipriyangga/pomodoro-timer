@@ -4,7 +4,7 @@ import { Orbitron } from 'next/font/google';
 const orbitron = Orbitron({ subsets: ["latin"], weight: ["700"] });
 const Pomodoro = () => {
     const [mounted, setMounted] = useState(false);
-    const [timeLeft, setTimeLeft] = useState(1 * 60);
+    const [timeLeft, setTimeLeft] = useState(25 * 60);
     const [isRunning, setIsRunning] = useState(false);
     const [mode, setMode] = useState<'work' | 'break'>('work');
 
@@ -61,7 +61,7 @@ const Pomodoro = () => {
                     fadeOut(breakSoundRef.current);
                 }
                 setMode('work');
-                setTimeLeft(1 * 60);
+                setTimeLeft(25 * 60);
             }
             setIsRunning(false);
         } else {
@@ -95,7 +95,7 @@ const Pomodoro = () => {
     };
     const handleReset = () => {
         setIsRunning(false);
-        setTimeLeft(mode === "work" ? 1 * 60 : 5 * 60);
+        setTimeLeft(mode === "work" ? 25 * 60 : 5 * 60);
         // reset musik break
         if (breakSoundRef.current) {
             fadeOut(breakSoundRef.current)
