@@ -3,8 +3,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Orbitron } from 'next/font/google';
 const orbitron = Orbitron({ subsets: ["latin"], weight: ["700"] });
 const Pomodoro = () => {
+    const [workDuration, setWorkDuration] = useState(25);
+    const [breakDuration, setBreakDuration] = useState(5);
     const [mounted, setMounted] = useState(false);
-    const [timeLeft, setTimeLeft] = useState(25 * 60);
+    const [timeLeft, setTimeLeft] = useState(workDuration * 60);
     const [isRunning, setIsRunning] = useState(false);
     const [mode, setMode] = useState<'work' | 'break'>('work');
 
@@ -95,7 +97,16 @@ const Pomodoro = () => {
     };
     const handleReset = () => {
         setIsRunning(false);
-        setTimeLeft(mode === "work" ? 25 * 60 : 5 * 60);
+        setTimeLeft(mode === "work" ? workDuration * 60 : breakDuration * 60);
+        // reset musik break
+        if (breakSoundRef.current) {
+            fadeOut(breakSoundRef.current)
+        }
+    };
+    const handleApply = () => {
+        setIsRunning(false);
+        setMode('work');
+        setTimeLeft(workDuration * 60);
         // reset musik break
         if (breakSoundRef.current) {
             fadeOut(breakSoundRef.current)
@@ -104,6 +115,21 @@ const Pomodoro = () => {
     return (
         <div className='flex flex-col bg-slate-900 justify-center min-h-screen items-center text-white'>
             <h1 className={`${orbitron.className} text-4xl mb-6 font-bold`}>Pomodoro Timer</h1>
+            {/* Input durasi custom */}
+
+            <div className='flex flex-col gap-4 mb-8 md:flex-row'>
+                <div>
+                    <label className={`${orbitron.className} text-lg mb-6 font-bold`}>Work minutes</label>
+                    <input type='number' min={1} value={workDuration} onChange={(e) => setWorkDuration(Number(e.target.value))} className='text-indigo-900 rounded px-2 py-1 w-20 bg-white ml-2' />
+                </div>
+                <div>
+                    <label className={`${orbitron.className} text-lg mb-6 font-bold`}>Break minutes</label>
+                    <input type='number' min={1} value={breakDuration} onChange={(e) => setBreakDuration(Number(e.target.value))} className='text-indigo-900 rounded px-2 py-1 w-20 bg-white ml-2' />
+                </div>
+                <button className='bg-indigo-400 px-3 py-1 rounded hover:bg-indigo-600'>
+                    <span className={`${orbitron.className} text-md mb-6 font-bold`} onClick={handleApply}>Apply</span>
+                </button>
+            </div>
             <div className={`${orbitron.className} text-6xl mb-6 font-bold tracking-widest text-indigo-500 shadow-[0_0_20px_#7300ff] p-2`}>{formatTime(timeLeft)}</div>
             <p className={`${orbitron.className} text-lg capitalize mb-6`}>{mode} Mode</p>
             <div className='space-x-4'>
